@@ -2788,6 +2788,7 @@ function main() {
         core.info(`permissions: type: ${typeof permissions}, JSON: ${JSON.stringify(permissions)}`);
     });
 }
+main();
 
 
 /***/ }),
