@@ -10,5 +10,4 @@ jobs:
 
       - uses: ./
         with:
-          permissions: |
-            contents:write
+          permissions: contents:write
