@@ -44,7 +44,12 @@ type PermissionValue = (typeof VALID_PERMISSION_VALUES)[number];
 
 async function main() {
   const shouldSetupGitCreds = core.getBooleanInput('setup-git-creds');
-  const permissions = core.getInput('permissions');
+  const permissions = core.getMultilineInput('permissions');
 
-  core.debug(`permissions: type: ${permissions}, JSON: ${JSON.stringify(permissions)}`);
+  core.info(
+    `setup-git-creds: type: ${typeof shouldSetupGitCreds}, JSON: ${JSON.stringify(
+      shouldSetupGitCreds
+    )}`
+  );
+  core.info(`permissions: type: ${typeof permissions}, JSON: ${JSON.stringify(permissions)}`);
 }

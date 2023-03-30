@@ -2783,8 +2783,9 @@ const VALID_PERMISSION_VALUES = (/* unused pure expression or super */ null && (
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const shouldSetupGitCreds = core.getBooleanInput('setup-git-creds');
-        const permissions = core.getInput('permissions');
-        core.debug(`permissions: type: ${permissions}, JSON: ${JSON.stringify(permissions)}`);
+        const permissions = core.getMultilineInput('permissions');
+        core.info(`setup-git-creds: type: ${typeof shouldSetupGitCreds}, JSON: ${JSON.stringify(shouldSetupGitCreds)}`);
+        core.info(`permissions: type: ${typeof permissions}, JSON: ${JSON.stringify(permissions)}`);
     });
 }
 
