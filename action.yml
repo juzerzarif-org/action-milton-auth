@@ -1,0 +1,25 @@
+name: 'juzerzarif-org/action-milton-auth'
+
+description: Mints a new GitHub auth token for milton-bot to be used in a workflow
+
+inputs:
+  permissions:
+    description: Permissions to be granted to this token
+    required: false
+  setup-git-creds:
+    description: Determines if the action should setup the minted token as credentials for GitHub authentication in git
+    required: false
+    default: true
+
+outputs:
+  token:
+    description: A GitHub auth token
+
+runs:
+  using: node16
+  main: dist/index.js
+  post: dist/cleanup.js
+
+branding:
+  icon: key
+  color: blue
