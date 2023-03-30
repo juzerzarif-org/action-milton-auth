@@ -10,6 +10,6 @@ jobs:
 
       - uses: ./
         with:
-          permissions:
-            contents: write
+          permissions: |
+            contents:write
           setup-git-creds: true
