@@ -1,6 +1,4 @@
-import { debug, getInput } from '@actions/core';
-import { getBooleanInput } from '@actions/core';
-import { getMultilineInput } from '@actions/core';
+import * as core from '@actions/core';
 
 const VALID_PERMISSION_KEYS = [
   'actions',
@@ -45,8 +43,8 @@ const VALID_PERMISSION_VALUES = ['read', 'write'] as const;
 type PermissionValue = (typeof VALID_PERMISSION_VALUES)[number];
 
 async function main() {
-  const shouldSetupGitCreds = getBooleanInput('setup-git-creds');
-  const permissions = getInput('permissions');
+  const shouldSetupGitCreds = core.getBooleanInput('setup-git-creds');
+  const permissions = core.getInput('permissions');
 
-  debug(`permissions: type: ${permissions}, JSON: ${JSON.stringify(permissions)}`);
+  core.debug(`permissions: type: ${permissions}, JSON: ${JSON.stringify(permissions)}`);
 }
