@@ -41,7 +41,6 @@ const VALID_PERMISSION_KEYS = [
   'organization_user_blocking',
   'team_discussions',
 ] as const;
-
 type PermissionKey = (typeof VALID_PERMISSION_KEYS)[number];
 function isValidPermissionKey(key: string): key is PermissionKey {
   return VALID_PERMISSION_KEYS.includes(key as PermissionKey);

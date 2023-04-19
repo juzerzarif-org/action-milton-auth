@@ -17,6 +17,7 @@ jobs:
           permissions: |
             contents:read
             metadata:read
+            organization_administration:write
 
       - name: Setup git credentials store
         run: |
