@@ -83,7 +83,7 @@ function getMiltonAppSecrets() {
 
 async function main() {
   const miltonSecrets = getMiltonAppSecrets();
-  const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDS);
+  // const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDS);
   const permissions = core.getMultilineInput(InputName.PERMISSIONS);
 
   if (!permissions) {

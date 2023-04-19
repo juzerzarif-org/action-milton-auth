@@ -31042,7 +31042,7 @@ function getMiltonAppSecrets() {
 }
 async function main() {
     const miltonSecrets = getMiltonAppSecrets();
-    const shouldSetupGitCreds = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getBooleanInput(InputName.SETUP_GIT_CREDS);
+    // const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDS);
     const permissions = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getMultilineInput(InputName.PERMISSIONS);
     if (!permissions) {
         throw new Error('You need to explicitly ask for the permissions you need');
