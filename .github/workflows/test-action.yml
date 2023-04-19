@@ -12,7 +12,9 @@ jobs:
         id: milton-auth
         with:
           milton-secrets: ${{ secrets.MILTON_SECRETS }}
-          permissions: contents:write
+          permissions: |
+            contents:read
+            metadata:read
 
       - name: Setup git credentials store
         run: |
