@@ -11,5 +11,5 @@ jobs:
       - uses: ./
         id: milton-auth
         with:
-          milton-secrets: secrets.MILTON_SECRETS
+          milton-secrets: ${{ secrets.MILTON_SECRETS }}
           permissions: contents:write
