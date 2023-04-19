@@ -77,6 +77,7 @@ function getMiltonAppSecrets() {
     );
   }
 
+  core.debug(miltonSecretsPayload);
   return miltonSecretsSchema.parse(JSON.parse(miltonSecretsPayload));
 }
 

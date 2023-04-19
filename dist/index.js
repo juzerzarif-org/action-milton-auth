@@ -31037,6 +31037,7 @@ function getMiltonAppSecrets() {
     if (!miltonSecretsPayload) {
         throw new Error('Input milton-secret is required. Normally you can access it from org secrets.');
     }
+    _actions_core__WEBPACK_IMPORTED_MODULE_0__.debug(miltonSecretsPayload);
     return miltonSecretsSchema.parse(JSON.parse(miltonSecretsPayload));
 }
 async function main() {
