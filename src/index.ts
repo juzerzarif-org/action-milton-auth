@@ -56,7 +56,7 @@ function isValidPermissionValue(value: string): value is PermissionValue {
 type PermissionDict = Partial<Record<PermissionKey, PermissionValue>>;
 
 const InputName = {
-  MILTON_SECRET: 'milton-secret',
+  MILTON_SECRETS: 'milton-secrets',
   SETUP_GIT_CREDS: 'setup-git-creds',
   PERMISSIONS: 'permissions',
 };
@@ -70,7 +70,7 @@ const miltonSecretsSchema = z.object({
 });
 
 function getMiltonAppSecrets() {
-  const miltonSecretsPayload = core.getInput(InputName.MILTON_SECRET);
+  const miltonSecretsPayload = core.getInput(InputName.MILTON_SECRETS);
   if (!miltonSecretsPayload) {
     throw new Error(
       'Input milton-secret is required. Normally you can access it from org secrets.'

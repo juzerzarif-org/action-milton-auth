@@ -31021,7 +31021,7 @@ function isValidPermissionValue(value) {
     return VALID_PERMISSION_VALUES.includes(value);
 }
 const InputName = {
-    MILTON_SECRET: 'milton-secret',
+    MILTON_SECRETS: 'milton-secrets',
     SETUP_GIT_CREDS: 'setup-git-creds',
     PERMISSIONS: 'permissions',
 };
@@ -31033,7 +31033,7 @@ const miltonSecretsSchema = zod__WEBPACK_IMPORTED_MODULE_1__.z.object({
     privateKey: zod__WEBPACK_IMPORTED_MODULE_1__.z.string(),
 });
 function getMiltonAppSecrets() {
-    const miltonSecretsPayload = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput(InputName.MILTON_SECRET);
+    const miltonSecretsPayload = _actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput(InputName.MILTON_SECRETS);
     if (!miltonSecretsPayload) {
         throw new Error('Input milton-secret is required. Normally you can access it from org secrets.');
     }
