@@ -3,13 +3,12 @@ name: 'juzerzarif-org/action-milton-auth'
 description: Mints a new GitHub auth token for milton-bot to be used in a workflow
 
 inputs:
+  milton-secrets:
+    description: Secrets payload for milton-bot. This is defined at org level. Most cases you just wanna pass secrets.MILTON_SECRETS
+    required: true
   permissions:
     description: Permissions to be granted to this token
     required: false
-  setup-git-creds:
-    description: Determines if the action should setup the minted token as credentials for GitHub authentication in git
-    required: false
-    default: true
 
 outputs:
   token:

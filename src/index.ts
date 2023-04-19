@@ -1,4 +1,8 @@
 import * as core from '@actions/core';
+import { createAppAuth } from '@octokit/auth-app';
+import { Octokit } from 'octokit';
+import { z } from 'zod';
+import { getGithubRepository } from './workflowEnv.js';
 
 const VALID_PERMISSION_KEYS = [
   'actions',
@@ -37,21 +41,92 @@ const VALID_PERMISSION_KEYS = [
   'organization_user_blocking',
   'team_discussions',
 ] as const;
+
 type PermissionKey = (typeof VALID_PERMISSION_KEYS)[number];
+function isValidPermissionKey(key: string): key is PermissionKey {
+  return VALID_PERMISSION_KEYS.includes(key as PermissionKey);
+}
 
 const VALID_PERMISSION_VALUES = ['read', 'write'] as const;
 type PermissionValue = (typeof VALID_PERMISSION_VALUES)[number];
-
-async function main() {
-  const shouldSetupGitCreds = core.getBooleanInput('setup-git-creds');
-  const permissions = core.getMultilineInput('permissions');
-
-  core.info(
-    `setup-git-creds: type: ${typeof shouldSetupGitCreds}, JSON: ${JSON.stringify(
-      shouldSetupGitCreds
-    )}`
-  );
-  core.info(`permissions: type: ${typeof permissions}, JSON: ${JSON.stringify(permissions)}`);
+function isValidPermissionValue(value: string): value is PermissionValue {
+  return VALID_PERMISSION_VALUES.includes(value as PermissionValue);
 }
 
-main();
+type PermissionDict = Partial<Record<PermissionKey, PermissionValue>>;
+
+const InputName = {
+  MILTON_SECRET: 'milton-secret',
+  SETUP_GIT_CREDS: 'setup-git-creds',
+  PERMISSIONS: 'permissions',
+};
+
+const miltonSecretsSchema = z.object({
+  appId: z.string(),
+  installationId: z.string(),
+  clientId: z.string(),
+  clientSecret: z.string(),
+  privateKey: z.string(),
+});
+
+function getMiltonAppSecrets() {
+  const miltonSecretsPayload = core.getInput(InputName.MILTON_SECRET);
+  if (!miltonSecretsPayload) {
+    throw new Error(
+      'Input milton-secret is required. Normally you can access it from org secrets.'
+    );
+  }
+
+  return miltonSecretsSchema.parse(JSON.parse(miltonSecretsPayload));
+}
+
+async function main() {
+  const miltonSecrets = getMiltonAppSecrets();
+  const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDS);
+  const permissions = core.getMultilineInput(InputName.PERMISSIONS);
+
+  if (!permissions) {
+    throw new Error('You need to explicitly ask for the permissions you need');
+  }
+
+  const permissionDict = permissions.reduce((permissionDict, permissionString) => {
+    const match = permissionString.match(/^(.+)\s*:\s*(.+)$/);
+    if (!match) {
+      throw new Error(
+        `Permission item "${permissionString}" does not conform to pattern "scope:value"`
+      );
+    }
+
+    const [, permissionKey, permissionValue] = match as [string, string, string];
+    if (!isValidPermissionKey(permissionKey)) {
+      throw new Error(`"${permissionKey}" is not a valid permission scope`);
+    }
+    if (!isValidPermissionValue(permissionValue)) {
+      throw new Error(`"${permissionValue}" is not a valid permission value`);
+    }
+
+    permissionDict[permissionKey] = permissionValue;
+    return permissionDict;
+  }, {} as PermissionDict);
+
+  const miltonApp = createAppAuth({
+    appId: miltonSecrets.appId,
+    privateKey: miltonSecrets.privateKey,
+  });
+  const auth = await miltonApp({
+    type: 'installation',
+    permissions: permissionDict,
+    installationId: miltonSecrets.installationId,
+  });
+
+  core.setOutput('token', auth.token);
+}
+
+try {
+  await main();
+} catch (err) {
+  core.error((err as Error | undefined) || 'Unknown error occurred');
+  process.exitCode = 1;
+} finally {
+  process.exit();
+}
