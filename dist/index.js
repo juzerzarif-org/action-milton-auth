@@ -32350,8 +32350,9 @@ async function main() {
         const gitUser = miltonSecrets.login;
         const gitEmail = `${miltonSecrets.userId}+${miltonSecrets.login}@users.noreply.github.com`;
         await gitFilesManager.ensureGlobalConfig();
-        await gitFilesManager.saveInCredentialStore(miltonSecrets.login, auth.token);
+        await gitFilesManager.saveInCredentialStore(gitUser, auth.token);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--global', 'credential.helper', 'store']);
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--global', 'credential.https://github.com.username', gitUser]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', [
             'config',
             '--global',
@@ -32366,15 +32367,9 @@ async function main() {
             'url.https://github.com/.insteadOf',
             'git@github.com:',
         ]);
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', [
-            'config',
-            '--global',
-            'credential.https://github.com.username',
-            miltonSecrets.login,
-        ]);
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--global', 'user.name', gitUser]);
-        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--global', 'user.email', gitEmail]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--list']);
+        // await exec('git', ['config', '--global', 'user.name', gitUser]);
+        // await exec('git', ['config', '--global', 'user.email', gitEmail]);
     }
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('token', auth.token);
 }

@@ -6,10 +6,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-
       - uses: ./
         id: milton-auth
         with:
@@ -18,27 +14,9 @@ jobs:
             contents:read
             metadata:read
 
-      # - name: Setup git credentials store
-      #   run: |
-      #     ls -a $HOME
-      #     export GIT_CONFIG_DIR=${XDG_CONFIG_HOME:-$HOME/.config}/git
-      #     mkdir -p $GIT_CONFIG_DIR
-      #     touch $GIT_CONFIG_DIR/credentials
-      #     echo "git_credentials_store=$GIT_CONFIG_DIR/credentials" >> $GITHUB_ENV
-
-      # - name: Add token to git credentials
-      #   env:
-      #     SCHR_READ_TOKEN: ${{ steps.milton-auth.outputs.token }}
-      #   run: |
-      #     printf "\nhttps://$GITHUB_ACTOR:$SCHR_READ_TOKEN@github.com\n" >> ${{ env.git_credentials_store }}
-
-      # - name: Configure git
-      #   run: |
-      #     git config --global credential.helper store
-      #     git config --global --replace-all url."https://github.com/".insteadOf ssh://git@github.com/
-      #     git config --global --add url."https://github.com/".insteadOf git@github.com:
-      #     git config --global user.name "$GITHUB_ACTOR"
-      #     git config --global user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ steps.milton-auth.outputs.token }}
 
       - name: Test git
         run: git ls-remote --heads ssh://git@github.com/juzerzarif-org/package-a.git

@@ -33,9 +33,10 @@ async function main() {
     const gitEmail = `${miltonSecrets.userId}+${miltonSecrets.login}@users.noreply.github.com`;
 
     await gitFilesManager.ensureGlobalConfig();
-    await gitFilesManager.saveInCredentialStore(miltonSecrets.login, auth.token);
+    await gitFilesManager.saveInCredentialStore(gitUser, auth.token);
 
     await exec('git', ['config', '--global', 'credential.helper', 'store']);
+    await exec('git', ['config', '--global', 'credential.https://github.com.username', gitUser]);
     await exec('git', [
       'config',
       '--global',
@@ -50,15 +51,9 @@ async function main() {
       'url.https://github.com/.insteadOf',
       'git@github.com:',
     ]);
-    await exec('git', [
-      'config',
-      '--global',
-      'credential.https://github.com.username',
-      miltonSecrets.login,
-    ]);
-    await exec('git', ['config', '--global', 'user.name', gitUser]);
-    await exec('git', ['config', '--global', 'user.email', gitEmail]);
     await exec('git', ['config', '--list']);
+    // await exec('git', ['config', '--global', 'user.name', gitUser]);
+    // await exec('git', ['config', '--global', 'user.email', gitEmail]);
   }
 
   core.setOutput('token', auth.token);
