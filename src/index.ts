@@ -40,24 +40,25 @@ async function main() {
       'config',
       '--global',
       '--replace-all',
-      'url."https://github.com/".insteadOf',
+      'url.https://github.com/.insteadOf',
       'ssh://github.com/',
     ]);
     await exec('git', [
       'config',
       '--global',
       '--add',
-      'url."https://github.com/".insteadOf',
+      'url.https://github.com/.insteadOf',
       'git@github.com:',
     ]);
     await exec('git', [
       'config',
       '--global',
-      'credential."https://github.com".username',
+      'credential.https://github.com.username',
       miltonSecrets.login,
     ]);
     await exec('git', ['config', '--global', 'user.name', gitUser]);
     await exec('git', ['config', '--global', 'user.email', gitEmail]);
+    await exec('git', ['config', '--list']);
   }
 
   core.setOutput('token', auth.token);

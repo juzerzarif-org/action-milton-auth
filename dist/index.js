@@ -32356,24 +32356,25 @@ async function main() {
             'config',
             '--global',
             '--replace-all',
-            'url."https://github.com/".insteadOf',
+            'url.https://github.com/.insteadOf',
             'ssh://github.com/',
         ]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', [
             'config',
             '--global',
             '--add',
-            'url."https://github.com/".insteadOf',
+            'url.https://github.com/.insteadOf',
             'git@github.com:',
         ]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', [
             'config',
             '--global',
-            'credential."https://github.com".username',
+            'credential.https://github.com.username',
             miltonSecrets.login,
         ]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--global', 'user.name', gitUser]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--global', 'user.email', gitEmail]);
+        await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', ['config', '--list']);
     }
     _actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput('token', auth.token);
 }
