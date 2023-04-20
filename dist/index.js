@@ -32357,7 +32357,7 @@ async function main() {
             '--global',
             '--replace-all',
             'url.https://github.com/.insteadOf',
-            'ssh://github.com/',
+            'ssh://git@github.com/',
         ]);
         await (0,_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('git', [
             'config',

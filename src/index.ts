@@ -41,7 +41,7 @@ async function main() {
       '--global',
       '--replace-all',
       'url.https://github.com/.insteadOf',
-      'ssh://github.com/',
+      'ssh://git@github.com/',
     ]);
     await exec('git', [
       'config',
