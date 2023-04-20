@@ -8,7 +8,11 @@ inputs:
     required: true
   permissions:
     description: Permissions to be granted to this token
+    required: true
+  setup-git-credentials:
+    description: Sets up the milton-bot token for authentication with git
     required: false
+    default: true
 
 outputs:
   token:
