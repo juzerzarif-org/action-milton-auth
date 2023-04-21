@@ -19,10 +19,7 @@ class GitFilesManager {
 
   static async initialize(): Promise<GitFilesManager> {
     const gitFilesManager = new GitFilesManager();
-    await Promise.all([
-      gitFilesManager.preserveFileIfNeeded(GLOBAL_CONFIG_PATH),
-      gitFilesManager.preserveFileIfNeeded(CREDENTIALS_STORE_PATH),
-    ]);
+    await gitFilesManager.preserveFilesIfNeeded([GLOBAL_CONFIG_PATH, CREDENTIALS_STORE_PATH]);
     return gitFilesManager;
   }
 
@@ -69,22 +66,26 @@ class GitFilesManager {
     }
   }
 
-  protected async preserveFileIfNeeded(filePath: string) {
+  protected async preserveFilesIfNeeded(filePaths: string[]) {
     const preservedFilesState = core.getState(this.PRESERVED_FILES_STATE_KEY) || '{}';
     const preservedFilesMap = JSON.parse(preservedFilesState) as Record<string, string>;
 
-    if (Object.prototype.hasOwnProperty.call(preservedFilesMap, filePath)) {
-      // File was already preserved nothing to do
-      return;
-    }
+    await Promise.all(
+      filePaths.map(async (filePath) => {
+        if (Object.prototype.hasOwnProperty.call(preservedFilesMap, filePath)) {
+          // File was already preserved nothing to do
+          return;
+        }
 
-    core.info(`Preserving original state of file used by git at ${filePath}`);
-    await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
-    const file = await fs.promises.open(filePath, 'a+');
+        core.info(`Preserving original state of file used by git at ${filePath}`);
+        await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+        const file = await fs.promises.open(filePath, 'a+');
 
-    preservedFilesMap[filePath] = await file.readFile({ encoding: 'utf-8' });
+        preservedFilesMap[filePath] = await file.readFile({ encoding: 'utf-8' });
+        await file.close();
+      })
+    );
     core.saveState(this.PRESERVED_FILES_STATE_KEY, JSON.stringify(preservedFilesMap));
-    await file.close();
   }
 }
 
