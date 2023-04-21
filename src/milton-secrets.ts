@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert from 'node:assert';
 
 const SECRET_PAYLOAD_KEYS = [
   'appId',
@@ -41,4 +41,4 @@ function parseMiltonSecrets(secretsPayload: string): MiltonSecrets {
   return secretsObject as MiltonSecrets;
 }
 
-export { MiltonSecrets, parseMiltonSecrets };
+export { type MiltonSecrets, parseMiltonSecrets };

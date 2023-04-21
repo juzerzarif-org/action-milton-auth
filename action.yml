@@ -4,24 +4,29 @@ description: Mints a new GitHub auth token for milton-bot to be used in a workfl
 
 inputs:
   milton-secrets:
-    description: Secrets payload for milton-bot. This is defined at org level. Most cases you just wanna pass secrets.MILTON_SECRETS
+    description: >
+      Secrets payload for milton-bot. This is defined at the org level. In most cases you just want
+      to provide secrets.MILTON_SECRETS
     required: true
   permissions:
-    description: Permissions to be granted to this token
+    description: >
+      Permissions to be granted to this token. Permissions use the format `scope:value`, example
+      `contents:read`. Each permission item should be separated by a newline. Valid scope values
+      can be found here - https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-an-installation-access-token-for-an-app
     required: true
   setup-git-credentials:
-    description: Sets up the milton-bot token for authentication with git
+    description: Sets up git to use the minted milton-bot token for authentication with GitHub
     required: false
     default: true
 
 outputs:
   token:
-    description: A GitHub auth token
+    description: A GitHub authentication token
 
 runs:
   using: node16
   main: dist/index.js
-  # post: dist/cleanup.js
+  post: dist/index.js
 
 branding:
   icon: key

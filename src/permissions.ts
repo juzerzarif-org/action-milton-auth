@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert from 'node:assert';
 
 const VALID_PERMISSION_SCOPES = [
   'actions',
@@ -75,4 +75,4 @@ function parsePermissions(permissionsInput: string): PermissionDict {
   }, {} as PermissionDict);
 }
 
-export { PermissionScope, PermissionValue, PermissionDict, parsePermissions };
+export { type PermissionScope, type PermissionValue, type PermissionDict, parsePermissions };

@@ -1,9 +1,18 @@
 import * as core from '@actions/core';
-import { createAppAuth } from '@octokit/auth-app';
+
+import { cleanupGitCredentials, setupGitCredentials } from './git-credentials.js';
+import {
+  cleanupMiltonInstallationToken,
+  createMiltonInstallationToken,
+} from './milton-installation.js';
 import { parseMiltonSecrets } from './milton-secrets.js';
 import { parsePermissions } from './permissions.js';
-import { exec } from '@actions/exec';
-import { GitFilesManager } from './git-files-manager.js';
+
+// Determines if this process is running the action's post phase
+const isPost = !!core.getState('is-post');
+if (!isPost) {
+  core.saveState('is-post', true);
+}
 
 const InputName = {
   MILTON_SECRETS: 'milton-secrets',
@@ -16,54 +25,33 @@ async function main() {
   const permissions = parsePermissions(core.getInput(InputName.PERMISSIONS));
   const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDENTIALS);
 
-  const miltonApp = createAppAuth({
-    appId: miltonSecrets.appId,
-    privateKey: miltonSecrets.privateKey,
-  });
-  const auth = await miltonApp({
-    type: 'installation',
-    installationId: miltonSecrets.installationId,
+  const miltonInstallationToken = await createMiltonInstallationToken({
+    secrets: miltonSecrets,
     permissions,
   });
 
   if (shouldSetupGitCreds) {
-    const gitFilesManager = GitFilesManager.initialize();
-    // user and email format from https://github.com/orgs/community/discussions/24664
-    const gitUser = miltonSecrets.login;
-    const gitEmail = `${miltonSecrets.userId}+${miltonSecrets.login}@users.noreply.github.com`;
-
-    await gitFilesManager.ensureGlobalConfig();
-    await gitFilesManager.saveInCredentialStore(gitUser, auth.token);
-
-    await exec('git', ['config', '--global', 'credential.helper', 'store']);
-    await exec('git', ['config', '--global', 'credential.https://github.com.username', gitUser]);
-    await exec('git', [
-      'config',
-      '--global',
-      '--replace-all',
-      'url.https://github.com/.insteadOf',
-      'ssh://git@github.com/',
-    ]);
-    await exec('git', [
-      'config',
-      '--global',
-      '--add',
-      'url.https://github.com/.insteadOf',
-      'git@github.com:',
-    ]);
-    await exec('git', ['config', '--list']);
-    // await exec('git', ['config', '--global', 'user.name', gitUser]);
-    // await exec('git', ['config', '--global', 'user.email', gitEmail]);
+    await setupGitCredentials(miltonSecrets.login, miltonInstallationToken);
   }
 
-  core.setOutput('token', auth.token);
+  core.setOutput('token', miltonInstallationToken);
+}
+
+async function cleanup() {
+  const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDENTIALS);
+
+  await cleanupMiltonInstallationToken();
+  if (shouldSetupGitCreds) {
+    await cleanupGitCredentials();
+  }
 }
 
 try {
-  await main();
+  if (isPost) {
+    await cleanup();
+  } else {
+    await main();
+  }
 } catch (err) {
   core.setFailed((err as Error | undefined) || 'Unknown error occurred');
-  process.exitCode = 1;
-} finally {
-  process.exit();
 }

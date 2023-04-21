@@ -1,110 +1,91 @@
-import * as core from '@actions/core';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
+import * as core from '@actions/core';
 import { escapeRegExp } from 'lodash';
 
-function buildStateHelpersFor(key: string) {
-  return {
-    get(): string {
-      return core.getState(key);
-    },
-    set(value: string) {
-      return core.saveState(key, value);
-    },
-  };
-}
+const CREDENTIALS_STORE_PATH = path.join(os.homedir(), '.git-credentials');
+const GLOBAL_CONFIG_PATH = path.join(
+  process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'),
+  'git',
+  'config'
+);
 
-const credentialStoreState = buildStateHelpersFor('git-credential-store');
-const globalConfigState = buildStateHelpersFor('git-global-config');
-
-export class GitFilesManager {
-  private originalCredentialStorePreserved = false;
-  private originalGlobalConfigPreserved = false;
-
-  private credentialStorePath = path.join(os.homedir(), '.git-credentials');
-  private globalConfigPath = path.join(
-    process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'),
-    'git',
-    'config'
-  );
+class GitFilesManager {
+  private PRESERVED_FILES_STATE_KEY = 'preserved-git-files';
 
   private constructor() {}
 
-  static initialize() {
-    return new GitFilesManager();
+  static async initialize(): Promise<GitFilesManager> {
+    const gitFilesManager = new GitFilesManager();
+    await Promise.all([
+      gitFilesManager.preserveFileIfNeeded(GLOBAL_CONFIG_PATH),
+      gitFilesManager.preserveFileIfNeeded(CREDENTIALS_STORE_PATH),
+    ]);
+    return gitFilesManager;
   }
 
   async saveInCredentialStore(user: string, password: string): Promise<void> {
-    core.startGroup('Store user credentials in git credential store');
-    const credentialStore = await this.openCredentialStore();
     const userCredentialRegex = new RegExp(`https:\/\/${escapeRegExp(user)}:.+@github\.com`);
 
-    const credentialUrls = (await credentialStore.readFile({ encoding: 'utf-8' }))
-      .split(/\r?\n/)
-      .filter((line) => {
-        line = line.trim();
-        if (!line) return false;
+    core.info(`Storing user credentials in git credential store at ${CREDENTIALS_STORE_PATH}`);
+    const credentialStoreContent = await fs.promises.readFile(CREDENTIALS_STORE_PATH, {
+      encoding: 'utf-8',
+    });
+    const credentialUrls = credentialStoreContent.split(/\r?\n/).filter((line) => {
+      line = line.trim();
+      if (!line) return false;
 
-        if (line.match(userCredentialRegex)) {
-          core.debug(
-            'Found an existing entry in the credential store with the same username. Removing...'
-          );
-          return false;
-        }
-
-        return true;
-      });
+      if (line.match(userCredentialRegex)) {
+        core.debug(
+          'Found an existing entry in the credential store with the same username. Removing...'
+        );
+        return false;
+      }
+      return true;
+    });
 
     credentialUrls.push(`https://${user}:${password}@github.com`);
-    await credentialStore.truncate(0);
-    await credentialStore.write(credentialUrls.join('\n'), null, 'utf-8');
-    await credentialStore.close();
-    core.endGroup();
+    await fs.promises.writeFile(CREDENTIALS_STORE_PATH, credentialUrls.join('\n'), {
+      encoding: 'utf-8',
+    });
   }
 
-  async cleanupCredentialStore() {
-    const savedCredentialStoreContent = credentialStoreState.get();
-    if (!savedCredentialStoreContent) {
-      await fs.promises.rm(this.credentialStorePath, { force: true });
-    } else {
-      await fs.promises.writeFile(this.credentialStorePath, savedCredentialStoreContent);
+  async restoreGitFiles(): Promise<void> {
+    const preservedFilesState = core.getState(this.PRESERVED_FILES_STATE_KEY) || '{}';
+    const preservedFilesMap = JSON.parse(preservedFilesState) as Record<string, string>;
+
+    for (const [filePath, fileContent] of Object.entries(preservedFilesMap)) {
+      core.info(`Restoring file at ${filePath} to its original state`);
+      if (!fileContent) {
+        await fs.promises.rm(filePath, { force: true });
+      } else {
+        await fs.promises.writeFile(filePath, fileContent, { encoding: 'utf-8' });
+      }
+
+      delete preservedFilesMap[filePath];
+      core.saveState(this.PRESERVED_FILES_STATE_KEY, JSON.stringify(preservedFilesMap));
     }
   }
 
-  async ensureGlobalConfig() {
-    core.info(`Using global git config file at ${this.globalConfigPath}`);
-    await fs.promises.mkdir(path.dirname(this.globalConfigPath), { recursive: true });
-    const globalConfig = await fs.promises.open(this.globalConfigPath, 'a+');
+  protected async preserveFileIfNeeded(filePath: string) {
+    const preservedFilesState = core.getState(this.PRESERVED_FILES_STATE_KEY) || '{}';
+    const preservedFilesMap = JSON.parse(preservedFilesState) as Record<string, string>;
 
-    if (!this.originalGlobalConfigPreserved) {
-      core.debug('Saving original state of global git config file to restore in post step');
-      globalConfigState.set(await globalConfig.readFile({ encoding: 'utf-8' }));
-      this.originalGlobalConfigPreserved = true;
+    if (Object.prototype.hasOwnProperty.call(preservedFilesMap, filePath)) {
+      // File was already preserved nothing to do
+      return;
     }
 
-    await globalConfig.close();
-  }
+    core.info(`Preserving original state of file used by git at ${filePath}`);
+    await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+    const file = await fs.promises.open(filePath, 'a+');
 
-  async cleanupGlobalConfig() {
-    const savedGlobalConfigContent = globalConfigState.get();
-    if (!savedGlobalConfigContent) {
-      await fs.promises.rm(this.globalConfigPath, { force: true });
-    } else {
-      await fs.promises.writeFile(this.globalConfigPath, savedGlobalConfigContent);
-    }
-  }
-
-  private async openCredentialStore() {
-    core.info(`Using git credential store at ${this.credentialStorePath}`);
-    const credentialStore = await fs.promises.open(this.credentialStorePath, 'a+');
-
-    if (!this.originalCredentialStorePreserved) {
-      core.debug('Saving original state of git credential store to restore in post step');
-      credentialStoreState.set(await credentialStore.readFile({ encoding: 'utf-8' }));
-      this.originalCredentialStorePreserved = true;
-    }
-
-    return credentialStore;
+    preservedFilesMap[filePath] = await file.readFile({ encoding: 'utf-8' });
+    core.saveState(this.PRESERVED_FILES_STATE_KEY, JSON.stringify(preservedFilesMap));
+    await file.close();
   }
 }
+
+export { GitFilesManager };
