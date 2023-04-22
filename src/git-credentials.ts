@@ -14,7 +14,7 @@ async function setupGitCredentials(user: string, password: string): Promise<void
   await exec('git', ['config', '--global', '--add', 'url.https://github.com/.insteadOf', 'git@github.com:']);
 }
 
-async function cleanupGitCredentials() {
+async function cleanupGitCredentials(): Promise<void> {
   const gitFilesManager = await GitFilesManager.initialize();
   await gitFilesManager.restoreGitFiles();
 }

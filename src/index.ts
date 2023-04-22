@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 
 import { cleanupGitCredentials, setupGitCredentials } from './git-credentials.js';
 import {
-  cleanupMiltonInstallationToken,
+  revokeMiltonInstallationToken,
   createMiltonInstallationToken,
 } from './milton-installation.js';
 import { parseMiltonSecrets } from './milton-secrets.js';
@@ -40,7 +40,7 @@ async function main() {
 async function cleanup() {
   const shouldSetupGitCreds = core.getBooleanInput(InputName.SETUP_GIT_CREDENTIALS);
 
-  await cleanupMiltonInstallationToken();
+  await revokeMiltonInstallationToken();
   if (shouldSetupGitCreds) {
     await cleanupGitCredentials();
   }

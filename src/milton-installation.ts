@@ -28,7 +28,7 @@ async function createMiltonInstallationToken(options: CreateMiltonTokenOptions):
   return miltonInstallation.token;
 }
 
-async function cleanupMiltonInstallationToken(): Promise<void> {
+async function revokeMiltonInstallationToken(): Promise<void> {
   const savedInstallationToken = core.getState(INSTALLATION_TOKEN_STATE_KEY);
   if (savedInstallationToken) {
     try {
@@ -42,4 +42,4 @@ async function cleanupMiltonInstallationToken(): Promise<void> {
   }
 }
 
-export { createMiltonInstallationToken, cleanupMiltonInstallationToken };
+export { createMiltonInstallationToken, revokeMiltonInstallationToken };
